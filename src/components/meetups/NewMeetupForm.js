@@ -1,67 +1,81 @@
-import React, { useContext } from "react"
-import useInput from "../../hooks/use-input"
-import useRequest from "../../hooks/use-request"
-import MeetupsContext from "../../store/meetups-context"
-import { useHistory } from "react-router-dom"
+import React, { useContext } from "react";
+import useInput from "../../hooks/use-input";
+import useRequest from "../../hooks/use-request";
+import MeetupsContext from "../../store/meetups-context";
+import { types } from "../../Reducers/reducer";
+import { useHistory } from "react-router-dom";
 
-import Card from '../ui/Card'
-import classes from './NewMeetupForm.module.css'
+import Card from "../ui/Card";
+import classes from "./NewMeetupForm.module.css";
 
-const notEmptyValidation = value => value.trim() !== ''
-const imageValidation = value => {
-  const regex = new RegExp('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')
-  return regex.test(value)
-}
+const notEmptyValidation = (value) => value.trim() !== "";
+const imageValidation = (value) => {
+  const regex = new RegExp(
+    "(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?"
+  );
+  return regex.test(value);
+};
 
-const NewMeetupForm = props => {
-  const {callAPI} = useRequest()
-  const meetupsCtx = useContext(MeetupsContext)
-  const history = useHistory()
+const NewMeetupForm = (props) => {
+  const { callAPI } = useRequest();
+  const meetupsCtx = useContext(MeetupsContext);
+  const history = useHistory();
 
   const {
     value: enteredTitle,
     valueChangeHandler: titleChangeHandler,
     isValid: enteredTitleIsValid,
     hasError: titleInputHasError,
-    inputBlurHandler: titleBlurHandler
-  } = useInput(notEmptyValidation)
+    inputBlurHandler: titleBlurHandler,
+    clearInput: clearTitle,
+  } = useInput(notEmptyValidation);
   const {
     value: enteredImage,
     valueChangeHandler: imageChangeHandler,
     isValid: enteredImageIsValid,
     hasError: imageInputHasError,
-    inputBlurHandler: imageBlurHandler
-  } = useInput(imageValidation)
+    inputBlurHandler: imageBlurHandler,
+    clearInput: clearImage,
+  } = useInput(imageValidation);
   const {
     value: enteredAddress,
     valueChangeHandler: addressChangeHandler,
     isValid: enteredAddressIsValid,
     hasError: addressInputHasError,
-    inputBlurHandler: addressBlurHandler
-  } = useInput(notEmptyValidation)
+    inputBlurHandler: addressBlurHandler,
+    clearInput: clearAddress,
+  } = useInput(notEmptyValidation);
   const {
     value: enteredDescription,
     valueChangeHandler: descriptionChangeHandler,
     isValid: enteredDescriptionIsValid,
     hasError: descriptionInputHasError,
-    inputBlurHandler: descriptionBlurHandler
-  } = useInput(notEmptyValidation)
+    inputBlurHandler: descriptionBlurHandler,
+    clearInput: clearDescription,
+  } = useInput(notEmptyValidation);
   const {
     value: enteredDate,
     valueChangeHandler: dateChangeHandler,
     isValid: enteredDateIsValid,
     hasError: dateInputHasError,
-    inputBlurHandler: dateBlurHandler
-  } = useInput(notEmptyValidation)
+    inputBlurHandler: dateBlurHandler,
+    clearInput: clearDate,
+  } = useInput(notEmptyValidation);
 
-  let  formIsValid = false
+  let formIsValid = false;
 
-  if (enteredTitleIsValid && enteredImageIsValid && enteredAddressIsValid && enteredDescriptionIsValid && enteredDateIsValid) {
-    formIsValid = true
+  if (
+    enteredTitleIsValid &&
+    enteredImageIsValid &&
+    enteredAddressIsValid &&
+    enteredDescriptionIsValid &&
+    enteredDateIsValid
+  ) {
+    formIsValid = true;
   }
 
-  const submitHandler = event => {
-    event.preventDefault()
+  const submitHandler = (event) => {
+    event.preventDefault();
 
     const meetupData = {
       title: enteredTitle,
@@ -69,67 +83,116 @@ const NewMeetupForm = props => {
       address: enteredAddress,
       description: enteredDescription,
       date: enteredDate,
-      attendeesId: ''
-    }
-    
-    callAPI(`${meetupsCtx.URLS.meetup}.json`, 'POST',meetupData)
-    .then(() => {
-      
-      // TODO: crear un accion y estado y actualizarlo y se haga el renderizado y retirar el history
-      //TODO: crear lista filtrada con base al resultado de la busqueda
-      history.replace('/')
-    })
-  }
+      attendeesId: "",
+    };
+
+    callAPI(`${meetupsCtx.URLS.meetup}.json`, "POST", meetupData).then(() => {
+      callAPI(`${meetupsCtx.URLS.meetup}.json`).then((data) => {
+        meetupsCtx.dispatch({
+          type: types.formattingData,
+          payload: data,
+        });
+      });
+      clearTitle();
+      clearImage();
+      clearAddress();
+      clearDate();
+      clearDescription();
+    });
+  };
 
   const titleInputClasses = titleInputHasError
     ? `${classes.control} ${classes.invalid}`
-    : classes.control
+    : classes.control;
   const imageInputClasses = imageInputHasError
     ? `${classes.control} ${classes.invalid}`
-    : classes.control
+    : classes.control;
   const addressInputClasses = addressInputHasError
     ? `${classes.control} ${classes.invalid}`
-    : classes.control
+    : classes.control;
   const descriptionInputClasses = descriptionInputHasError
     ? `${classes.control} ${classes.invalid}`
-    : classes.control
+    : classes.control;
   const dateInputClasses = dateInputHasError
     ? `${classes.control} ${classes.invalid}`
-    : classes.control
+    : classes.control;
 
   return (
     <Card>
       <form className={classes.form} onSubmit={submitHandler}>
         <div className={titleInputClasses}>
           <label htmlFor="title">Meetup Title</label>
-          <input type='text' required id='title' value={enteredTitle} onChange={titleChangeHandler} onBlur={titleBlurHandler}/>
+          <input
+            type="text"
+            required
+            id="title"
+            value={enteredTitle}
+            onChange={titleChangeHandler}
+            onBlur={titleBlurHandler}
+          />
         </div>
-        {titleInputHasError && <p className={classes.feed}>Title must not be empty</p>}
+        {titleInputHasError && (
+          <p className={classes.feed}>Title must not be empty</p>
+        )}
         <div className={imageInputClasses}>
           <label htmlFor="image">Meetup Image</label>
-          <input type='url' required id='image' value={enteredImage} onChange={imageChangeHandler} onBlur={imageBlurHandler}/>
+          <input
+            type="url"
+            required
+            id="image"
+            value={enteredImage}
+            onChange={imageChangeHandler}
+            onBlur={imageBlurHandler}
+          />
         </div>
-        {imageInputHasError && <p className={classes.feed}>Please enter valid image url</p>}
+        {imageInputHasError && (
+          <p className={classes.feed}>Please enter valid image url</p>
+        )}
         <div className={addressInputClasses}>
           <label htmlFor="address">Address</label>
-          <input type='text' required id='address' value={enteredAddress} onChange={addressChangeHandler} onBlur={addressBlurHandler}/>
+          <input
+            type="text"
+            required
+            id="address"
+            value={enteredAddress}
+            onChange={addressChangeHandler}
+            onBlur={addressBlurHandler}
+          />
         </div>
         <div className={dateInputClasses}>
           <label htmlFor="date">Date</label>
-          <input type='date' required id='date' value={enteredDate} onChange={dateChangeHandler} onBlur={dateBlurHandler}/>
+          <input
+            type="date"
+            required
+            id="date"
+            value={enteredDate}
+            onChange={dateChangeHandler}
+            onBlur={dateBlurHandler}
+          />
         </div>
-        {dateInputHasError && <p className={classes.feed}>Please enter a date</p>}
+        {dateInputHasError && (
+          <p className={classes.feed}>Please enter a date</p>
+        )}
         <div className={descriptionInputClasses}>
           <label htmlFor="description">Description</label>
-          <textarea id="description" required rows='5' value={enteredDescription} onChange={descriptionChangeHandler} onBlur={descriptionBlurHandler}></textarea>
+          <textarea
+            id="description"
+            required
+            rows="5"
+            value={enteredDescription}
+            onChange={descriptionChangeHandler}
+            onBlur={descriptionBlurHandler}
+          ></textarea>
         </div>
-        {descriptionInputHasError && <p className={classes.feed}>Description must not be empty</p>}
+        {descriptionInputHasError && (
+          <p className={classes.feed}>Description must not be empty</p>
+        )}
         <div className={classes.actions}>
           <button disabled={!formIsValid}>Add Meetup</button>
         </div>
       </form>
     </Card>
-  )
-}
+  );
+};
 
-export default NewMeetupForm
+export default NewMeetupForm;
