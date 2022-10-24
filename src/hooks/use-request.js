@@ -1,52 +1,54 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 const useRequest = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const bodySetter = (body, method) => {
-    switch(method) {
-      case 'POST':
-        return ({
-          method,
-            body: JSON.stringify(body),
-            headers: {
-              'Content-Type': 'application/json'
-            }
-        })
-      case 'DELETE':
-        return ({
-          method
-        })
-      case 'PATCH':
-        return ({
+    switch (method) {
+      case "POST":
+        return {
           method,
           body: JSON.stringify(body),
           headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-      default :
-        return null
+            "Content-Type": "application/json",
+          },
+        };
+      case "DELETE":
+        return {
+          method,
+        };
+      case "PATCH":
+        return {
+          method,
+          body: JSON.stringify(body),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+      default:
+        return null;
     }
-  }
-  
-  const callAPI = async (url, method = 'GET', body = null) => {
-    setIsLoading('true')
+  };
+
+  const callAPI = async (url, method = "GET", body = null) => {
+    console.log("in");
+    setIsLoading("true");
     const response = await fetch(url, bodySetter(body, method));
-    setIsLoading(false)
+    console.log(response);
+    setIsLoading(false);
     if (!response.ok) {
-      setError('something is wrong')
-      throw Error(`something is wrong. ${response.status}`)
+      setError("something is wrong");
+      throw Error(`something is wrong. ${response.status}`);
     }
-    return response.json()
-  }
+    return response.json();
+  };
 
   return {
     isLoading,
     error,
-    callAPI
-  }
-}
+    callAPI,
+  };
+};
 
-export default useRequest
+export default useRequest;
